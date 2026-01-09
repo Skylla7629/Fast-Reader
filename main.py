@@ -18,13 +18,15 @@ class WebHandler:
         response = requests.get(url, timeout=2, headers=headers)
         return response
 
-    def extract_paragraph(self, response: requests.Response) -> str:
+    def extract_paragraph(self, response: requests.Response) -> list:
         tree = html.fromstring(response.content)
         paragraphs = tree.xpath('//*[@id="chr-content"]')
         soup = bs4.BeautifulSoup(html.tostring(paragraphs[0]), 'html.parser')
         paragraphs = soup.find_all('p')
-        content = '\n'.join([p.get_text() for p in paragraphs])
-        return content
+        words = []
+        for p in paragraphs:
+            words += [p.get_text(strip=False).split(" ")]
+        return words
 
 
 def main():
