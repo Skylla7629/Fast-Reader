@@ -94,6 +94,18 @@ class ScreenCursor:
         sys.stdout.write(f"{ESC}[{y};{x}H")
         self.pos_y = y
         self.pos_x = x
+        sys.stdout.flush()
+
+    def backspaces(self, n=1):
+        """Moves cursor back by n columns."""
+        self.pos_x -= n
+        sys.stdout.write(f"{ESC}[{n}D")
+        sys.stdout.flush()
+
+    def deletes(self, n=1):
+        """Deletes n characters at current cursor position."""
+        sys.stdout.write(f"{ESC}[{n}P")
+        sys.stdout.flush()
 
     def lines_down(self, n=1):
         """Moves cursor down by n lines."""
@@ -210,7 +222,10 @@ class TUI(threading.Thread):
                     self.input_buffer = ""
                     self.mode = "NORMAL"
                 elif key == '\x7f':
-                    self.input_buffer = self.input_buffer[:-1]
+                    if len(self.input_buffer) > 0:
+                        self.input_buffer = self.input_buffer[:-1]
+                        self.cursor.backspaces()
+                        self.cursor.deletes()
                 else:
                     self.input_buffer += key
                     self.cursor.write(key)
@@ -220,6 +235,8 @@ class TUI(threading.Thread):
                     self.quit()
                 elif key == "i":
                     self.fastReader.url_request()   
+                elif key == "c":
+                    self.reloadRequired = True
                 self.cursor.move_to(10, 5)
                 self.cursor.write(f"You pressed: {key}\n")
             
