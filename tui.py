@@ -177,7 +177,15 @@ class TUI(threading.Thread):
         for _ in range(rows - 2):
             self.cursor.write(f"|{' ' * (cols-2)}|\n")
         self.cursor.write(f"+{'-' * (cols-2)}+\n")
-
+        
+        self.cursor.move_to(rows - 1, 3)
+        if self.mode == "NORMAL":
+            self.cursor.write("Load URL: i | Clear: c | Reading: r | Quit: q")
+        elif self.mode == "INPUT":
+            self.cursor.write("--INSERT--")
+        elif self.mode == "READ":
+            self.cursor.write("--READING--    next <p>: -> | prev <p>: <- | change speed: arrows-up/down | back: q")
+        
         #self.cursor.write(f"{RED}+{'-' * (cols//3)}+{'-' * (cols -3- cols//3)}+{RESET}\n")
         #for _ in range(rows - 8):
         #    self.cursor.write(f"{RED}|{RESET}{' ' * (cols//3)}{RED}|{RESET}{' ' * (cols -3- cols//3)}{RED}|{RESET}\n")
@@ -189,6 +197,8 @@ class TUI(threading.Thread):
 
     def getUserInput(self, prompt: str) -> str:
         self.requestedInput = True
+        self.mode = "INPUT"
+        self.paint_screen()
         self.cursor.move_to(5, 5)
         self.cursor.write(prompt)
         while self.userInputResult is None:
@@ -196,6 +206,7 @@ class TUI(threading.Thread):
         result = self.userInputResult
         self.userInputResult = None
         self.requestedInput = False
+        self.reloadRequired = True
         return result
 
 
@@ -237,8 +248,14 @@ class TUI(threading.Thread):
                     self.fastReader.url_request()   
                 elif key == "c":
                     self.reloadRequired = True
-                self.cursor.move_to(10, 5)
-                self.cursor.write(f"You pressed: {key}\n")
+                elif key == "r":
+                    self.mode = "READ"
+                    self.reloadRequired = True
+
+            elif self.mode == "READ":
+                if key == 'q':
+                    self.mode = "NORMAL"
+                    self.reloadRequired = True
             
             if self.reloadRequired:
                 self.paint_screen()
