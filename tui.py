@@ -239,7 +239,7 @@ class TUI(threading.Thread):
             self.cursor.write("--INSERT--")
         elif self.mode == "READ":
             self.cursor.write(
-                "--READING--    next <p>: -> | prev <p>: <- | change speed: arrows-up/down | back: q"
+                "--READING--   pause: space | next <p>: -> | prev <p>: <- | change speed: arrows-up/down | back: q"
             )
 
         # self.cursor.write(f"{RED}+{'-' * (cols//3)}+{'-' * (cols -3- cols//3)}+{RESET}\n")
@@ -312,6 +312,16 @@ class TUI(threading.Thread):
                 if key == "q":
                     self.mode = "NORMAL"
                     self.reloadRequired = True
+                if key == "KEY_UP":
+                    self.fastReader.speed_up()
+                if key == "KEY_DOWN":
+                    self.fastReader.speed_down()
+                if key == "KEY_LEFT":
+                    self.fastReader.p_back()
+                if key == "KEY_RIGHT":
+                    self.fastReader.p_forward()
+                if key == " ":
+                    self.fastReader.pause()
 
             if self.reloadRequired:
                 self.paint_screen()
