@@ -124,6 +124,7 @@ class ScreenCursor:
     def __init__(self):
         self.pos_y = 1
         self.pos_x = 1
+        self.hidden = False
 
     def write(self, text):
         """Writes text at current cursor position."""
@@ -171,6 +172,18 @@ class ScreenCursor:
         """Moves cursor up by n lines."""
         self.pos_y -= n
         sys.stdout.write(f"{ESC}[{n}A")
+
+    def hide(self, set=None):
+        if set is None:
+            self.hidden = not self.hidden
+        else:
+            self.hidden = set
+
+        if self.hidden:
+            sys.stdout.write(HIDE_CURSOR)
+        else:
+            sys.stdout.write(SHOW_CURSOR)
+        sys.stdout.flush()
 
     def quit(self):
         """Restores cursor visibility and exits."""
@@ -261,11 +274,18 @@ class TUI(threading.Thread):
         result = self.userInputResult
         self.userInputResult = None
         self.requestedInput = False
-        self.reloadRequired = True
+        self.paint_screen()
         return result
 
+    def put_word(self, word: str) -> None:
+        size = self.get_size()
+        self.cursor.move_to(size[0] // 2, 1)
+        self.cursor.write(" " * (size[1] - 2))
+        self.cursor.move_to(size[0] // 2, (size[1] - len(word)) // 2)
+        self.cursor.write(word)
+
     def run(self) -> None:
-        self.cursor.write(HIDE_CURSOR)
+        self.cursor.hide(True)
         self.cursor.write(CLEAR)
         self.cursor.move_to(1, 1)
         self.paint_screen()
@@ -275,7 +295,7 @@ class TUI(threading.Thread):
             f"{RED}Terminal Size: {self.get_size()[0]} rows x {self.get_size()[1]} cols{RESET}\n"
         )
 
-        self.cursor.write(SHOW_CURSOR)
+        self.cursor.hide(False)
 
         while self.running:
             key = self.kbListener.get_key()
@@ -304,13 +324,19 @@ class TUI(threading.Thread):
                     self.fastReader.url_request()
                 elif key == "c":
                     self.reloadRequired = True
+                elif key == "d":
+                    self.fastReader.dump()
                 elif key == "r":
                     self.mode = "READ"
+                    self.fastReader.pause(True)
+                    self.cursor.hide(True)
                     self.reloadRequired = True
 
             elif self.mode == "READ":
                 if key == "q":
                     self.mode = "NORMAL"
+                    self.fastReader.pause(False)
+                    self.cursor.hide(False)
                     self.reloadRequired = True
                 if key == "KEY_UP":
                     self.fastReader.speed_up()
