@@ -135,7 +135,11 @@ class WebHandler:
                     buffer.append((word, 3, x))
                 elif word.replace('"', "").endswith(","):
                     buffer.append((word, 2, x))
-                elif word.replace('"', "").endswith("."):
+                elif (
+                    word.replace('"', "").endswith(".")
+                    or word.replace('"', "").endswith("!")
+                    or word.replace('"', "").endswith("?")
+                ):
                     buffer.append((word, 2.5, x))
                 elif len(word) > 10:
                     buffer.append((word, 1.7, x))
