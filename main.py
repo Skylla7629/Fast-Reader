@@ -133,9 +133,9 @@ class WebHandler:
             for i, word in enumerate(paragraph):
                 if i == len(paragraph) - 1:
                     buffer.append((word, 3, x))
-                elif word.endswith(","):
+                elif word.replace('"', "").endswith(","):
                     buffer.append((word, 2, x))
-                elif word.endswith("."):
+                elif word.replace('"', "").endswith("."):
                     buffer.append((word, 2.5, x))
                 elif len(word) > 10:
                     buffer.append((word, 1.7, x))
